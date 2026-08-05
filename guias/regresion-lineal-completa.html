@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Regresión Lineal — Guía Completa</title>
+<style>
+  body {
+    font-family: 'Georgia', serif;
+    background: #f7f5f0;
+    color: #2b2b2b;
+    margin: 0;
+    padding: 30px 20px;
+    line-height: 1.6;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+  h1 {
+    font-size: 26px;
+    border-bottom: 4px solid #b5533c;
+    padding-bottom: 12px;
+    margin-bottom: 4px;
+  }
+  .subtitle { color: #777; font-size: 14px; margin-bottom: 30px; }
+  h2 {
+    font-size: 19px;
+    color: #b5533c;
+    margin-top: 46px;
+    border-left: 5px solid #b5533c;
+    padding-left: 10px;
+  }
+  h3 { font-size: 15px; color: #444; margin-top: 22px; }
+  .card {
+    background: white;
+    border: 1px solid #e6e2d8;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 14px 0;
+  }
+  .formula {
+    background: #2b2b2b;
+    color: #f4f1ea;
+    font-family: 'Cambria Math', 'Times New Roman', serif;
+    font-size: 18px;
+    padding: 16px 20px;
+    border-radius: 6px;
+    text-align: center;
+    margin: 16px 0;
+    letter-spacing: 0.3px;
+  }
+  .formula small { display:block; color:#c9a08f; font-size: 12px; margin-top:6px; font-family: Georgia, serif;}
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 7px 10px;
+    text-align: center;
+  }
+  th { background: #efe9df; }
+  code {
+    background: #eee;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+  }
+  .step-number {
+    display: inline-block;
+    background: #b5533c;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 22px;
+    font-size: 13px;
+    margin-right: 8px;
+  }
+  .note {
+    background: #fbf3ea;
+    border-left: 4px solid #d99a5b;
+    padding: 10px 16px;
+    font-size: 14px;
+    margin: 14px 0;
+  }
+  svg { background: white; border: 1px solid #ddd; display: block; margin: 20px auto; }
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px;
+    justify-content: center; margin-top: -10px;
+  }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .sq { width: 12px; height: 12px; display: inline-block; }
+  .toc {
+    background: white; border: 1px solid #e6e2d8; border-radius: 6px;
+    padding: 14px 20px; font-size: 14px;
+  }
+  .toc a { color: #b5533c; text-decoration: none; }
+  .toc li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Regresión Lineal, de principio a fin</h1>
+  <div class="subtitle">Desde "¿qué queremos predecir?" hasta de dónde sale cada número, incluyendo m.</div>
+
+  <div class="toc">
+    <strong>Contenido:</strong>
+    <ol>
+      <li><a href="#datos">Los datos de partida</a></li>
+      <li><a href="#modelo">El modelo: la ecuación de una línea</a></li>
+      <li><a href="#costo">La función de costo (qué tan mal predice)</a></li>
+      <li><a href="#derivar">Por qué derivamos, y respecto a qué</a></li>
+      <li><a href="#sistema">Resolver el sistema para encontrar m y b</a></li>
+      <li><a href="#numeros">Sustituir los números reales — de dónde sale el 2</a></li>
+      <li><a href="#grafico">El resultado, graficado</a></li>
+      <li><a href="#error">Qué pasa cuando los datos NO caen perfecto en la línea</a></li>
+    </ol>
+  </div>
+
+  <h2 id="datos">1. Los datos de partida</h2>
+  <div class="card">
+    Queremos predecir el <strong>precio de una casa</strong> según sus <strong>metros²</strong>. Tenemos 3 casas de referencia:
+    <table>
+      <tr><th>Casa</th><th>x = metros²</th><th>y = precio (miles $)</th></tr>
+      <tr><td>1</td><td>50</td><td>100</td></tr>
+      <tr><td>2</td><td>70</td><td>140</td></tr>
+      <tr><td>3</td><td>100</td><td>200</td></tr>
+    </table>
+    n = 3 (tenemos 3 puntos de dato).
+  </div>
+
+  <h2 id="modelo">2. El modelo: la ecuación de una línea</h2>
+  <div class="card">
+    Queremos encontrar una línea recta que pase lo más cerca posible de esos 3 puntos. Toda línea recta se escribe:
+    <div class="formula">
+      ŷ = m·x + b
+      <small>ŷ = precio predicho &nbsp;|&nbsp; m = pendiente (cuánto sube el precio por cada m² extra) &nbsp;|&nbsp; b = intercepto (precio cuando x=0)</small>
+    </div>
+    <strong>El problema real es:</strong> no sabemos todavía cuánto valen m y b. Eso es exactamente lo que el algoritmo va a "aprender" — encontrar los valores de m y b que mejor ajusten estos 3 puntos.
+  </div>
+
+  <div class="note">
+    <strong>Ojo con esto:</strong> la pendiente no es una propiedad de un punto solo — un punto aislado como (50,100) no tiene pendiente.
+    La pendiente es una <strong>relación entre dos puntos</strong>: cuánto cambia y (Δy) dividido entre cuánto cambia x (Δx).
+    <div class="formula" style="margin-top:10px;">
+      m = Δy / Δx
+    </div>
+    Lo especial de una recta es que esa razón sale <strong>igual sin importar qué dos puntos tomes</strong>. Por ejemplo, en la línea ŷ=2x:
+    de (50,100) a (100,200) → (200−100)/(100−50) = 100/50 = 2. De (50,100) a (70,140) → (140−100)/(70−50) = 40/20 = 2.
+    Siempre 2 — por eso decimos que "m" es LA pendiente de toda la recta, no de un punto en particular.
+  </div>
+
+  <h2 id="costo">3. La función de costo — ¿qué tan mal predice una línea?</h2>
+  <div class="card">
+    Para CUALQUIER línea que probemos (cualquier m, b), podemos medir qué tan lejos quedan sus predicciones de los datos reales. Para cada punto i:
+    <div class="formula">
+      errorᵢ = yᵢ − ŷᵢ = yᵢ − (m·xᵢ + b)
+    </div>
+    Elevamos al cuadrado (para que errores positivos y negativos no se cancelen, y para castigar más los errores grandes):
+    <div class="formula">
+      errorᵢ² = (yᵢ − m·xᵢ − b)²
+    </div>
+    Y promediamos ese error² entre los n puntos — esto se llama <strong>Error Cuadrático Medio (MSE)</strong>:
+    <div class="formula">
+      J(m,b) = (1/n) · Σ (yᵢ − m·xᵢ − b)²
+    </div>
+    <div class="note">
+      <strong>La meta:</strong> encontrar los valores de m y b que hagan que J(m,b) sea lo más pequeño posible. Ese es literalmente "entrenar" el modelo — buscar el mínimo de esta función.
+    </div>
+  </div>
+
+  <h2 id="derivar">4. ¿Por qué derivamos? ¿Y por qué dos veces?</h2>
+  <div class="card">
+    J(m,b) es como un tazón en 3D: el eje de altura es el error, y el "suelo" tiene dos ejes, uno para m y otro para b.
+    <table>
+      <tr><th></th><th>¿Qué pregunta responde?</th></tr>
+      <tr><td><code>∂J/∂m</code></td><td>Si me muevo solo en la dirección de m (b fijo), ¿subo o bajo?</td></tr>
+      <tr><td><code>∂J/∂b</code></td><td>Si me muevo solo en la dirección de b (m fijo), ¿subo o bajo?</td></tr>
+    </table>
+    En el punto más bajo del tazón, <strong>ambas</strong> pendientes son cero al mismo tiempo. Por eso igualamos ambas derivadas a cero — es un sistema de 2 ecuaciones con 2 incógnitas (m y b):
+    <div class="formula">
+      ∂J/∂m = 0 &nbsp;&nbsp;&nbsp; y &nbsp;&nbsp;&nbsp; ∂J/∂b = 0
+    </div>
+  </div>
+
+  <h2 id="sistema">5. Resolver el sistema — sacando las fórmulas de m y b</h2>
+  <div class="card">
+    <h3><span class="step-number">1</span>Derivando respecto a m</h3>
+    <div class="formula">
+      ∂J/∂m = (−2/n) · Σ xᵢ(yᵢ − m·xᵢ − b) = 0
+    </div>
+    <h3><span class="step-number">2</span>Derivando respecto a b</h3>
+    <div class="formula">
+      ∂J/∂b = (−2/n) · Σ (yᵢ − m·xᵢ − b) = 0
+    </div>
+    <h3><span class="step-number">3</span>Resolviendo ese sistema de 2 ecuaciones</h3>
+    Se despeja algebraicamente (es álgebra de sistemas lineales, el mismo tipo que resolvías en la prepa con 2 ecuaciones y 2 incógnitas). El resultado son estas dos fórmulas ya "listas para usar" — se llaman <strong>Ecuaciones Normales</strong>:
+    <div class="formula">
+      m = [n·Σ(xᵢyᵢ) − Σxᵢ·Σyᵢ] / [n·Σxᵢ² − (Σxᵢ)²]
+      <small>la pendiente óptima</small>
+    </div>
+    <div class="formula">
+      b = [Σyᵢ − m·Σxᵢ] / n
+      <small>el intercepto óptimo, una vez que ya tienes m</small>
+    </div>
+    <div class="note">
+      Aquí es donde vive el "2" que preguntaste — todavía no lo hemos calculado, son fórmulas genéricas. En la siguiente sección metemos los números reales de la tabla.
+    </div>
+  </div>
+
+  <h2 id="numeros">6. Sustituyendo los números reales — de dónde sale el 2</h2>
+  <div class="card">
+    <h3><span class="step-number">1</span>Calcular cada pieza que pide la fórmula</h3>
+    <table>
+      <tr><th>Casa</th><th>x</th><th>y</th><th>x·y</th><th>x²</th></tr>
+      <tr><td>1</td><td>50</td><td>100</td><td>5,000</td><td>2,500</td></tr>
+      <tr><td>2</td><td>70</td><td>140</td><td>9,800</td><td>4,900</td></tr>
+      <tr><td>3</td><td>100</td><td>200</td><td>20,000</td><td>10,000</td></tr>
+      <tr><td><strong>Σ (suma)</strong></td><td><strong>220</strong></td><td><strong>440</strong></td><td><strong>34,800</strong></td><td><strong>17,400</strong></td></tr>
+    </table>
+
+    <h3><span class="step-number">2</span>Sustituir en la fórmula de m</h3>
+    <div class="formula">
+      m = [3 · 34,800 − 220 · 440] / [3 · 17,400 − 220²]
+    </div>
+    <div class="formula">
+      m = [104,400 − 96,800] / [52,200 − 48,400]
+    </div>
+    <div class="formula">
+      m = 7,600 / 3,800
+    </div>
+    <div class="formula" style="background:#7a3b2a;">
+      <strong>m = 2</strong>
+      <small>Aquí nace el 2 — no es arbitrario, sale directo de estos 3 datos de entrenamiento</small>
+    </div>
+
+    <h3><span class="step-number">3</span>Sustituir en la fórmula de b (ya con m=2)</h3>
+    <div class="formula">
+      b = [440 − 2 · 220] / 3 = [440 − 440] / 3 = 0/3
+    </div>
+    <div class="formula" style="background:#7a3b2a;">
+      <strong>b = 0</strong>
+    </div>
+
+    <h3><span class="step-number">4</span>La línea final, ya entrenada</h3>
+    <div class="formula">
+      ŷ = 2x + 0 &nbsp;→&nbsp; ŷ = 2x
+    </div>
+    <div class="note">
+      Esta línea no fue elegida a mano — es matemáticamente <strong>la única línea recta que minimiza el error total</strong> sobre esos 3 puntos específicos. Si cambiaras un solo dato de la tabla, m y b saldrían distintos.
+    </div>
+  </div>
+
+  <h2 id="grafico">7. El resultado, graficado</h2>
+  <div class="card">
+    Con m=2 y b=0, la línea pasa <strong>exactamente</strong> sobre los 3 puntos originales (por eso elegimos ese dataset, para que el ajuste fuera perfecto y el error fuera cero):
+    <table>
+      <tr><th>x</th><th>y real</th><th>ŷ = 2x</th><th>error</th></tr>
+      <tr><td>50</td><td>100</td><td>100</td><td>0</td></tr>
+      <tr><td>70</td><td>140</td><td>140</td><td>0</td></tr>
+      <tr><td>100</td><td>200</td><td>200</td><td>0</td></tr>
+    </table>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:#2b6cb0"></span> Punto real = predicción (ajuste perfecto)</span>
+  </div>
+  <svg width="480" height="420" viewBox="0 0 480 420">
+    <g stroke="#e5e2da" stroke-width="1">
+      <line x1="50" y1="20" x2="50" y2="380"/><line x1="90" y1="20" x2="90" y2="380"/>
+      <line x1="130" y1="20" x2="130" y2="380"/><line x1="170" y1="20" x2="170" y2="380"/>
+      <line x1="210" y1="20" x2="210" y2="380"/><line x1="250" y1="20" x2="250" y2="380"/>
+      <line x1="290" y1="20" x2="290" y2="380"/><line x1="330" y1="20" x2="330" y2="380"/>
+      <line x1="370" y1="20" x2="370" y2="380"/><line x1="410" y1="20" x2="410" y2="380"/>
+      <line x1="450" y1="20" x2="450" y2="380"/>
+    </g>
+    <g stroke="#e5e2da" stroke-width="1">
+      <line x1="50" y1="380" x2="450" y2="380"/><line x1="50" y1="340" x2="450" y2="340"/>
+      <line x1="50" y1="300" x2="450" y2="300"/><line x1="50" y1="260" x2="450" y2="260"/>
+      <line x1="50" y1="220" x2="450" y2="220"/><line x1="50" y1="180" x2="450" y2="180"/>
+      <line x1="50" y1="140" x2="450" y2="140"/><line x1="50" y1="100" x2="450" y2="100"/>
+      <line x1="50" y1="60" x2="450" y2="60"/><line x1="50" y1="20" x2="450" y2="20"/>
+    </g>
+    <line x1="50" y1="380" x2="450" y2="380" stroke="#2b2b2b" stroke-width="2"/>
+    <line x1="50" y1="20" x2="50" y2="380" stroke="#2b2b2b" stroke-width="2"/>
+    <g font-size="11" fill="#555" text-anchor="middle">
+      <text x="50" y="395">0</text><text x="90" y="395">10</text><text x="130" y="395">20</text>
+      <text x="170" y="395">30</text><text x="210" y="395">40</text><text x="250" y="395">50</text>
+      <text x="290" y="395">60</text><text x="330" y="395">70</text><text x="370" y="395">80</text>
+      <text x="410" y="395">90</text><text x="450" y="395">100</text>
+    </g>
+    <text x="250" y="410" font-size="12" fill="#2b2b2b" text-anchor="middle">x = metros²</text>
+    <g font-size="11" fill="#555" text-anchor="end">
+      <text x="45" y="384">0</text><text x="45" y="344">20</text><text x="45" y="304">40</text>
+      <text x="45" y="264">60</text><text x="45" y="224">80</text><text x="45" y="184">100</text>
+      <text x="45" y="144">120</text><text x="45" y="104">140</text><text x="45" y="64">160</text>
+      <text x="45" y="24">180/200</text>
+    </g>
+    <!-- line y=2x from (0,0)px(50,380) to (100,200)px(450,20) -->
+    <line x1="50" y1="380" x2="450" y2="20" stroke="#b5533c" stroke-width="2.5"/>
+    <text x="410" y="35" font-size="12" fill="#b5533c" font-weight="bold">ŷ = 2x</text>
+    <!-- points: (50,100)px(250,220) (70,140)px(330,140) (100,200)px(450,20)->already labeled, use (450,20) but avoid overlap use offset-->
+    <circle cx="250" cy="220" r="6" fill="#2b6cb0"/>
+    <text x="258" y="215" font-size="11">(50,100)</text>
+    <circle cx="330" cy="140" r="6" fill="#2b6cb0"/>
+    <text x="338" y="135" font-size="11">(70,140)</text>
+    <circle cx="450" cy="20" r="6" fill="#2b6cb0"/>
+    <text x="380" y="15" font-size="11">(100,200)</text>
+  </svg>
+
+  <h2 id="error">8. ¿Y si los datos NO caen perfecto en la línea?</h2>
+  <div class="card">
+    Usemos la MISMA línea (ŷ=2x, ya entrenada arriba) pero con 3 casas nuevas que no calzan perfecto, para ver errores reales:
+    <table>
+      <tr><th>x</th><th>y real</th><th>ŷ = 2x</th><th>error = y − ŷ</th><th>error²</th></tr>
+      <tr><td>50</td><td>110</td><td>100</td><td>10</td><td>100</td></tr>
+      <tr><td>70</td><td>135</td><td>140</td><td>−5</td><td>25</td></tr>
+      <tr><td>100</td><td>195</td><td>200</td><td>−5</td><td>25</td></tr>
+    </table>
+    <div class="formula">
+      J = (100 + 25 + 25) / 3 = 50
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:#2b6cb0"></span> Punto real (dato)</span>
+    <span><span class="dot" style="background:#b5533c"></span> Punto predicho (sobre la línea)</span>
+    <span><span class="sq" style="background:rgba(181,83,60,0.25); border:1px solid #b5533c"></span> Cuadrado de error (lado = |error|, área = error²)</span>
+  </div>
+  <svg width="480" height="420" viewBox="0 0 480 420">
+    <g stroke="#e5e2da" stroke-width="1">
+      <line x1="50" y1="20" x2="50" y2="380"/><line x1="90" y1="20" x2="90" y2="380"/>
+      <line x1="130" y1="20" x2="130" y2="380"/><line x1="170" y1="20" x2="170" y2="380"/>
+      <line x1="210" y1="20" x2="210" y2="380"/><line x1="250" y1="20" x2="250" y2="380"/>
+      <line x1="290" y1="20" x2="290" y2="380"/><line x1="330" y1="20" x2="330" y2="380"/>
+      <line x1="370" y1="20" x2="370" y2="380"/><line x1="410" y1="20" x2="410" y2="380"/>
+      <line x1="450" y1="20" x2="450" y2="380"/>
+    </g>
+    <g stroke="#e5e2da" stroke-width="1">
+      <line x1="50" y1="380" x2="450" y2="380"/><line x1="50" y1="340" x2="450" y2="340"/>
+      <line x1="50" y1="300" x2="450" y2="300"/><line x1="50" y1="260" x2="450" y2="260"/>
+      <line x1="50" y1="220" x2="450" y2="220"/><line x1="50" y1="180" x2="450" y2="180"/>
+      <line x1="50" y1="140" x2="450" y2="140"/><line x1="50" y1="100" x2="450" y2="100"/>
+      <line x1="50" y1="60" x2="450" y2="60"/><line x1="50" y1="20" x2="450" y2="20"/>
+    </g>
+    <line x1="50" y1="380" x2="450" y2="380" stroke="#2b2b2b" stroke-width="2"/>
+    <line x1="50" y1="20" x2="50" y2="380" stroke="#2b2b2b" stroke-width="2"/>
+    <g font-size="11" fill="#555" text-anchor="middle">
+      <text x="50" y="395">0</text><text x="90" y="395">10</text><text x="130" y="395">20</text>
+      <text x="170" y="395">30</text><text x="210" y="395">40</text><text x="250" y="395">50</text>
+      <text x="290" y="395">60</text><text x="330" y="395">70</text><text x="370" y="395">80</text>
+      <text x="410" y="395">90</text><text x="450" y="395">100</text>
+    </g>
+    <text x="250" y="410" font-size="12" fill="#2b2b2b" text-anchor="middle">x = metros²</text>
+    <line x1="50" y1="380" x2="450" y2="20" stroke="#b5533c" stroke-width="2.5"/>
+    <text x="410" y="35" font-size="12" fill="#b5533c" font-weight="bold">ŷ = 2x</text>
+
+    <!-- point 1: predicted (50,100)px(250,220); real (50,110)px(250,202) -->
+    <line x1="250" y1="220" x2="250" y2="202" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+    <rect x="250" y="202" width="18" height="18" fill="rgba(181,83,60,0.25)" stroke="#b5533c"/>
+    <circle cx="250" cy="220" r="5" fill="#b5533c"/>
+    <circle cx="250" cy="202" r="5" fill="#2b6cb0"/>
+    <text x="270" y="198" font-size="10">(50,110) real</text>
+    <text x="270" y="234" font-size="10">(50,100) pred.</text>
+    <text x="270" y="216" font-size="10" fill="#b5533c">e=10,á=100</text>
+
+    <!-- point 2: predicted (70,140)px(330,140); real (70,135)px(330,149) -->
+    <line x1="330" y1="140" x2="330" y2="149" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+    <rect x="330" y="140" width="9" height="9" fill="rgba(181,83,60,0.25)" stroke="#b5533c"/>
+    <circle cx="330" cy="140" r="5" fill="#b5533c"/>
+    <circle cx="330" cy="149" r="5" fill="#2b6cb0"/>
+    <text x="342" y="138" font-size="10">(70,140) pred.</text>
+    <text x="342" y="160" font-size="10">(70,135) real</text>
+    <text x="342" y="172" font-size="10" fill="#b5533c">e=-5,á=25</text>
+
+    <!-- point 3: predicted (100,200)px(450,20); real (100,195)px(450,29) -->
+    <line x1="450" y1="20" x2="450" y2="29" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+    <rect x="441" y="20" width="9" height="9" fill="rgba(181,83,60,0.25)" stroke="#b5533c"/>
+    <circle cx="450" cy="20" r="5" fill="#b5533c"/>
+    <circle cx="450" cy="29" r="5" fill="#2b6cb0"/>
+    <text x="330" y="18" font-size="10">(100,200) pred.</text>
+    <text x="330" y="45" font-size="10">(100,195) real</text>
+    <text x="330" y="58" font-size="10" fill="#b5533c">e=-5,á=25</text>
+  </svg>
+
+  <div class="note">
+    <strong>Resumen del viaje completo:</strong> partimos de 3 datos → armamos J(m,b) → derivamos respecto a m y b → resolvimos el sistema → sustituimos números reales → obtuvimos m=2, b=0 → construimos la línea → la usamos para predecir y medir error en datos nuevos. Cada paso depende del anterior; nada se sacó "de la nada".
+  </div>
+
+</div>
+</body>
+</html>
